@@ -1,0 +1,225 @@
+##Creatinggraphs from Acoustic Data on a .csv file
+###################
+#SAVE TO DIRECTORY BEFORE STARTING
+###################
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+import PyPDF2 as pypdf
+
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.lib.units import inch, cm
+import pathlib 
+
+#create blank pdfs to saved .py file
+canvas1 = Canvas("plot_all.pdf", pagesize =(11.7 * inch, 8.3*inch))
+canvas2 = Canvas("plot_l90.pdf", pagesize =(11.7 * inch, 8.3*inch))
+canvas3 = Canvas("plot_l10.pdf", pagesize =(11.7 * inch, 8.3*inch))
+canvas4 = Canvas("plot_leq.pdf", pagesize =(11.7 * inch, 8.3*inch))
+
+
+#####################################################################
+#####################################################################
+#import data CHANGE DATA DIRECTORY !!!!!!!!
+data_csv = '_________.csv'
+
+##### Y axis step value
+y_step = 5
+
+#####################################################################
+#####################################################################
+
+#Select Header Page (Image)
+conabeare_header = "_________.pdf"
+
+
+
+#####################################################################
+#####################################################################
+#Assign PDFs 
+all_plot_pdf = (pathlib.Path().resolve()/"plot_all.pdf")
+l90_plot = (pathlib.Path().resolve()/"plot_l90.pdf")
+l10_plot = (pathlib.Path().resolve()/"plot_l10.pdf")
+leq_plot = (pathlib.Path().resolve()/"plot_leq.pdf")
+#####################################################################
+#####################################################################
+
+#import csv data
+df = pd.read_csv(data_csv, index_col="Time")
+
+ 
+################################################################
+#All
+#Set Figsize
+plt.figure(figsize=(11.7,8.3))
+#Set x axis values
+plt.xticks(np.arange(0,100, step=5),rotation=30)
+#Set y axis values
+plt.yticks(np.arange(0,100, step=y_step))
+#Set y axis title
+plt.ylabel("Sound Level dB(A)")
+#set x axis title
+plt.xlabel('Time: Start {} through to {}'.format(df['Date'][1], df.iloc[-1,0]))
+#Set grid
+plt.grid()
+
+
+#Plot
+sns.lineplot(data=df, ci=None)
+### add start and finish date
+#plt.text(30.75,14.85, 'Start {} through to {}'.format(df['Date'][1], df['Date'][100]), fontsize=12)
+#save
+plt.savefig('plot_all.pdf')
+
+plt.show()
+
+######### Merge with Header
+with open(all_plot_pdf, "rb") as inFile, open(conabeare_header, "rb") as overlay:
+    original = pypdf.PdfFileReader(inFile)
+    background = original.getPage(0)
+    foreground = pypdf.PdfFileReader(overlay).getPage(0)
+
+    # merge the first two pages
+    background.mergePage(foreground)
+
+    # add all pages to a writer
+    writer = pypdf.PdfFileWriter()
+    for i in range(original.getNumPages()):
+        page = original.getPage(i)
+        writer.addPage(page)
+
+    # write everything in the writer to a file
+    with open("plot_all.pdf", "wb") as outFile:
+        writer.write(outFile)
+
+################################################################
+#Graph 1 (L90)
+#Set Figsize
+plt.figure(figsize=(11.7,8.3))
+#Set x axis values
+plt.xticks(np.arange(0,100, step=5),rotation=30)
+#Set y axis values
+plt.yticks(np.arange(0,100, step=y_step))
+#Set y axis title
+plt.ylabel("Sound Level dB(A)")
+#set x axis title
+plt.xlabel('Time: Start {} through to {}'.format(df['Date'][1], df.iloc[-1,0]))
+plt.grid()
+
+#Plot
+sns.lineplot(data=df, y= 'LF90.0', x='Time', ci=None, color='orange', legend='auto')
+plt.legend(labels=["LA90"], fontsize = 'large')
+plt.savefig('plot_l90.pdf')
+
+### add start and finish date
+#plt.text(30.75,20.85, 'Start {} through to {}'.format(df['Date'][1], df['Date'][100]), fontsize=12)
+
+plt.show()
+
+######### Merge with Conabeare Header
+with open(l90_plot, "rb") as inFile, open(conabeare_header, "rb") as overlay:
+    original = pypdf.PdfFileReader(inFile)
+    background = original.getPage(0)
+    foreground = pypdf.PdfFileReader(overlay).getPage(0)
+
+    # merge the first two pages
+    background.mergePage(foreground)
+
+    # add all pages to a writer
+    writer = pypdf.PdfFileWriter()
+    for i in range(original.getNumPages()):
+        page = original.getPage(i)
+        writer.addPage(page)
+
+    # write everything in the writer to a file
+    with open("plot_l90.pdf", "wb") as outFile:
+        writer.write(outFile)
+
+################################################################
+#Graph 2 L10
+#Set Figsize
+plt.figure(figsize=(11.7,8.3))
+#Set x axis values
+plt.xticks(np.arange(0,100, step=5),rotation=30)
+#Set y axis values
+plt.yticks(np.arange(0,100, step=y_step))
+#Set y axis title
+plt.ylabel("Sound Level dB(A)")
+#set x axis title
+plt.xlabel('Time: Start {} through to {}'.format(df['Date'][1], df.iloc[-1,0]))
+plt.grid()
+
+#Plot
+sns.lineplot(data=df, y= 'LF10.0', x='Time', ci=None, color='blue')
+plt.legend(labels=["LA10"], fontsize = 'large')
+plt.savefig('plot_l10.pdf')
+
+### add start and finish date
+#plt.text(30.75,22.85, 'Start {} through to {}'.format(df['Date'][1], df['Date'][100]), fontsize=12)
+plt.show()
+
+######### Merge with Header
+with open(l10_plot, "rb") as inFile, open(conabeare_header, "rb") as overlay:
+    original = pypdf.PdfFileReader(inFile)
+    background = original.getPage(0)
+    foreground = pypdf.PdfFileReader(overlay).getPage(0)
+
+    # merge the first two pages
+    background.mergePage(foreground)
+
+    # add all pages to a writer
+    writer = pypdf.PdfFileWriter()
+    for i in range(original.getNumPages()):
+        page = original.getPage(i)
+        writer.addPage(page)
+
+    # write everything in the writer to a file
+    with open("plot_l10.pdf", "wb") as outFile:
+        writer.write(outFile)
+
+################################################################
+#Graph 3 Leq
+#Set Figsize
+plt.figure(figsize=(11.7,8.3))
+#Set x axis values
+plt.xticks(np.arange(0,100, step=5),rotation=30)
+#Set y axis values
+plt.yticks(np.arange(0,100, step=y_step))
+#Set y axis title
+plt.ylabel("Sound Level dB(A)")
+#set x axis title
+plt.xlabel('Time: Start {} through to {}'.format(df['Date'][1], df.iloc[-1,0]))
+plt.grid()
+
+#Plot
+sns.lineplot(data=df, y= 'Leq', x='Time', ci=None, color='red')
+plt.legend(labels=["LAeq"], fontsize = 'large')
+plt.savefig('plot_leq.pdf')
+
+### add start and finish date
+#plt.text(30.75,20.85, 'Start {} through to {}'.format(df['Date'][1], df['Date'][100]), fontsize=12)
+
+plt.show()
+
+######### Merge with Header
+with open(leq_plot, "rb") as inFile, open(conabeare_header, "rb") as overlay:
+    original = pypdf.PdfFileReader(inFile)
+    background = original.getPage(0)
+    foreground = pypdf.PdfFileReader(overlay).getPage(0)
+
+    # merge the first two pages
+    background.mergePage(foreground)
+
+    # add all pages to a writer
+    writer = pypdf.PdfFileWriter()
+    for i in range(original.getNumPages()):
+        page = original.getPage(i)
+        writer.addPage(page)
+
+    # write everything in the writer to a file
+    with open("plot_leq.pdf", "wb") as outFile:
+        writer.write(outFile)
